@@ -1,5 +1,6 @@
 package com.sukoon;
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity // tells JPA this class this java class represents a database table
 @Table(name = "users") // this tells JPA what to name the table in database
 public class User {
@@ -9,6 +10,7 @@ public class User {
 
     private String name;
     private String email;
+    @JsonIgnore
     private String password;
 
     // Default Constructor - required by JPA

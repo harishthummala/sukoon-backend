@@ -18,6 +18,7 @@ public class MoodEntry {
     private String notes;
     private LocalDateTime timestamp;
 
+
     //Many mood entries belong to One user
     @ManyToOne
     @JoinColumn(name="user_id")
@@ -42,4 +43,5 @@ public class MoodEntry {
     public void setTimestamp(LocalDateTime timestamp){
         this.timestamp = timestamp;
     }
+
 }
