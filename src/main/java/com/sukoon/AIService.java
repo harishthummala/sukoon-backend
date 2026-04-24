@@ -24,34 +24,34 @@ public class AIService {
                 "companion. A user is feeling " + mood + ". " +
                 "They shared: '" + notes + "'. " +
                 "Respond with empathy, offer one practical suggestion, " +
-                "keep response under 20 words.";
+                "keep response under 25 words.";
 
-        // Gemini request format
+        // OpenAI/Groq request format
         String requestBody = "{"
-                + "\"contents\": [{"
-                + "\"parts\": [{"
-                + "\"text\": \"" + prompt.replace("\"", "\\\"") + "\""
-                + "}]"
+                + "\"model\": \"llama-3.1-8b-instant\","
+                + "\"messages\": [{"
+                + "\"role\": \"user\","
+                + "\"content\": \"" + prompt.replace("\"", "\\\"") + "\""
                 + "}]"
                 + "}";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey); // IMPORTANT
 
         HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
 
-        // Gemini uses API key as query parameter
         ResponseEntity<Map> response = restTemplate.exchange(
-                URI.create(apiUrl + "?key=" + apiKey),
+                apiUrl,
                 HttpMethod.POST,
                 request,
                 Map.class
         );
 
-        // Extract Gemini response
-        List<Map> candidates = (List<Map>) response.getBody().get("candidates");
-        Map content = (Map) candidates.get(0).get("content");
-        List<Map> parts = (List<Map>) content.get("parts");
-        return (String) parts.get(0).get("text");
+        // Extract Groq response
+        List<Map> choices = (List<Map>) response.getBody().get("choices");
+        Map message = (Map) choices.get(0).get("message");
+
+        return (String) message.get("content");
     }
 }

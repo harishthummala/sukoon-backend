@@ -4,6 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 
 @RestController
 @RequestMapping("/api/moods")
@@ -18,6 +22,8 @@ public class MoodEntryController {
     @Autowired
     private AIService aiService;
 
+
+    private static final Logger log = LoggerFactory.getLogger(MoodEntryController.class);
     // Log mood + get AI response
     @PostMapping("/log/{userId}")
     public Map<String, Object> logMood(@PathVariable Long userId,
@@ -28,15 +34,24 @@ public class MoodEntryController {
             return Map.of("error", "User not found");
         }
 
+        // Get AI response
+
+        String aiResponse;
+        try {
+            aiResponse = aiService.getMoodResponse(
+                    moodEntry.getMood(),
+                    moodEntry.getNotes()
+            );
+        }catch (Exception e){
+            log.error("AI API failed for userId: {}", userId, e);
+            aiResponse = "Sorry, something went wrong. Try again later.";
+        }
+
+        moodEntry.setAiResponse(aiResponse);
+
         // Save mood entry
         moodEntry.setUser(user);
         MoodEntry saved = moodEntryRepository.save(moodEntry);
-
-        // Get AI response
-        String aiResponse = aiService.getMoodResponse(
-                moodEntry.getMood(),
-                moodEntry.getNotes()
-        );
 
         // Return both mood entry and AI response
         return Map.of(

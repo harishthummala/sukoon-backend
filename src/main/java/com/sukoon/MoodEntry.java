@@ -17,6 +17,8 @@ public class MoodEntry {
     private String mood;
     private String notes;
     private LocalDateTime timestamp;
+    @Column(name = "ai_response")
+    private String aiResponse;
 
 
     //Many mood entries belong to One user
@@ -24,7 +26,7 @@ public class MoodEntry {
     @JoinColumn(name="user_id")
     private User user;
 
-    //default constructo
+    //default constructor
     public MoodEntry(){
         this.timestamp = LocalDateTime.now();
     }
@@ -35,6 +37,7 @@ public class MoodEntry {
     public String getNotes() {return notes; }
     public LocalDateTime getTimestamp() { return timestamp; }
     public User getUser() { return user; }
+    public String getAiResponse() { return aiResponse; }
 
     //setters
     public void setMood(String mood) { this.mood = mood; }
@@ -43,5 +46,6 @@ public class MoodEntry {
     public void setTimestamp(LocalDateTime timestamp){
         this.timestamp = timestamp;
     }
+    public void setAiResponse(String aiResponse) { this.aiResponse = aiResponse; }
 
 }
