@@ -11,10 +11,10 @@ import java.util.Map;
 @Service
 public class AIService {
 
-    @Value("${gemini.api.key}")
+    @Value("${ai.api.key}")
     private String apiKey;
 
-    @Value("${gemini.api.url}")
+    @Value("${ai.api.url}")
     private String apiUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
