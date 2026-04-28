@@ -15,16 +15,13 @@ public class MoodEntry {
     private  Long id;
 
     private String mood;
-    private String notes;
     private LocalDateTime timestamp;
-    @Column(name = "ai_response")
-    private String aiResponse;
 
 
     //Many mood entries belong to One user
     @ManyToOne
-    @JoinColumn(name="user_id")
-    private User user;
+    @JoinColumn(name="chat_id")
+    private Chat chat;
 
     //default constructor
     public MoodEntry(){
@@ -34,18 +31,14 @@ public class MoodEntry {
     //getters
     public long getId() { return id;}
     public String getMood() { return mood; }
-    public String getNotes() {return notes; }
     public LocalDateTime getTimestamp() { return timestamp; }
-    public User getUser() { return user; }
-    public String getAiResponse() { return aiResponse; }
+    public Chat getChat() {return chat;}
 
     //setters
     public void setMood(String mood) { this.mood = mood; }
-    public void setNotes(String notes) { this.notes = notes; }
-    public void setUser(User user) { this.user = user; }
+    public void setChat(Chat chat) { this.chat = chat; }
     public void setTimestamp(LocalDateTime timestamp){
         this.timestamp = timestamp;
     }
-    public void setAiResponse(String aiResponse) { this.aiResponse = aiResponse; }
 
 }

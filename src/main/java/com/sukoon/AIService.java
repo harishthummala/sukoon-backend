@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -19,25 +18,73 @@ public class AIService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public String getMoodResponse(String mood, String notes) {
-        String prompt = "You are Sukoon, a compassionate AI mental wellness " +
-                "companion. A user is feeling " + mood + ". " +
-                "They shared: '" + notes + "'. " +
-                "Respond with empathy, offer one practical suggestion, " +
-                "keep response under 25 words.";
+    // Regular chat with memory
+    public String getMoodResponse(String message, String mood,
+                                  List<ChatMessageEntry> history) {
 
-        // OpenAI/Groq request format
-        String requestBody = "{"
-                + "\"model\": \"llama-3.1-8b-instant\","
-                + "\"messages\": [{"
-                + "\"role\": \"user\","
-                + "\"content\": \"" + prompt.replace("\"", "\\\"") + "\""
-                + "}]"
-                + "}";
+        // Build conversation history for AI memory
+        StringBuilder messages = new StringBuilder("[");
 
+        // System message — tells AI who it is
+        messages.append("{\"role\":\"system\",\"content\":\"You are Sukoon, ")
+                .append("a compassionate AI mental wellness companion. ")
+                .append("The user is feeling ").append(mood).append(". ")
+                .append("Respond with empathy, keep responses under 25 words.\"},");
+
+        // Add previous messages for memory
+        for(ChatMessageEntry prev : history) {
+            // Add user message
+            messages.append("{\"role\":\"user\",\"content\":\"")
+                    .append(prev.getMessage().replace("\"", "\\\""))
+                    .append("\"},");
+
+            // Add AI response if exists
+            if(prev.getAiResponse() != null) {
+                messages.append("{\"role\":\"assistant\",\"content\":\"")
+                        .append(prev.getAiResponse().replace("\"", "\\\""))
+                        .append("\"},");
+            }
+        }
+
+        // Add current new message
+        messages.append("{\"role\":\"user\",\"content\":\"")
+                .append(message.replace("\"", "\\\""))
+                .append("\"}]");
+
+        String requestBody = "{\"model\":\"llama-3.1-8b-instant\","
+                + "\"messages\":" + messages + "}";
+
+        return callGroq(requestBody);
+    }
+
+    // Generate chat summary at end
+    public String getChatSummary(List<ChatMessageEntry> history, String mood) {
+        StringBuilder conversation = new StringBuilder();
+
+        for(ChatMessageEntry msg : history) {
+            conversation.append("User: ").append(msg.getMessage()).append("\n");
+            if(msg.getAiResponse() != null) {
+                conversation.append("Sukoon: ").append(msg.getAiResponse()).append("\n");
+            }
+        }
+
+        String summaryPrompt = "Summarize this mental wellness conversation "
+                + "in 3 sentences. User's mood was: " + mood
+                + ". Conversation:\n" + conversation;
+
+        String requestBody = "{\"model\":\"llama-3.1-8b-instant\","
+                + "\"messages\":[{\"role\":\"user\",\"content\":\""
+                + summaryPrompt.replace("\"", "\\\"")
+                + "\"}]}";
+
+        return callGroq(requestBody);
+    }
+
+    // Shared Groq API caller
+    private String callGroq(String requestBody) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(apiKey); // IMPORTANT
+        headers.setBearerAuth(apiKey);
 
         HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
 
@@ -48,10 +95,8 @@ public class AIService {
                 Map.class
         );
 
-        // Extract Groq response
         List<Map> choices = (List<Map>) response.getBody().get("choices");
-        Map message = (Map) choices.get(0).get("message");
-
-        return (String) message.get("content");
+        Map msg = (Map) choices.get(0).get("message");
+        return (String) msg.get("content");
     }
 }

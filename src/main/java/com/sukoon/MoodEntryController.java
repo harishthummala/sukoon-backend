@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 
 @RestController
-@RequestMapping("/api/moods")
+@RequestMapping("/api/mood")
 public class MoodEntryController {
 
     @Autowired
@@ -20,48 +20,19 @@ public class MoodEntryController {
     private UserRepository userRepository;
 
     @Autowired
-    private AIService aiService;
+    private ChatRepository chatRepository;
 
-
-    private static final Logger log = LoggerFactory.getLogger(MoodEntryController.class);
-    // Log mood + get AI response
-    @PostMapping("/log/{userId}")
-    public Map<String, Object> logMood(@PathVariable Long userId,
-                                       @RequestBody MoodEntry moodEntry) {
-        // Find user
-        User user = userRepository.findById(userId).orElse(null);
-        if(user == null) {
-            return Map.of("error", "User not found");
-        }
-
-        // Get AI response
-
-        String aiResponse;
-        try {
-            aiResponse = aiService.getMoodResponse(
-                    moodEntry.getMood(),
-                    moodEntry.getNotes()
-            );
-        }catch (Exception e){
-            log.error("AI API failed for userId: {}", userId, e);
-            aiResponse = "Sorry, something went wrong. Try again later.";
-        }
-
-        moodEntry.setAiResponse(aiResponse);
-
-        // Save mood entry
-        moodEntry.setUser(user);
-        MoodEntry saved = moodEntryRepository.save(moodEntry);
-
-        // Return both mood entry and AI response
-        return Map.of(
-                "moodEntry", saved,
-                "aiResponse", aiResponse
-        );
+    // Log mood
+    @PostMapping("/{chatId}/logmood")
+    public MoodEntry logMood(@PathVariable Long chatId, @RequestBody MoodEntry moodEntry) {
+        Chat chat = chatRepository.findById(chatId).orElse(null);
+        moodEntry.setChat(chat);
+        return moodEntryRepository.save(moodEntry);
     }
-    //get all moods for a specific user
-    @GetMapping("/user/{userId}")
-    public List<MoodEntry>getUserMoods(@PathVariable Long userId){
-        return moodEntryRepository.findByUserId(userId);
+
+    //view mood
+    @GetMapping("{chatId}/viewmood")
+    public List<MoodEntry> viewMood(@PathVariable Long chatId){
+        return moodEntryRepository.findByChatId(chatId);
     }
 }

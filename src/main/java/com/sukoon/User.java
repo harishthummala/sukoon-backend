@@ -10,7 +10,6 @@ public class User {
 
     private String name;
     private String email;
-    @JsonIgnore
     private String password;
 
     // Default Constructor - required by JPA
