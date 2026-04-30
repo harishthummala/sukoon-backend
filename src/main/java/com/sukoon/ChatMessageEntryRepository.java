@@ -10,4 +10,6 @@ public interface ChatMessageEntryRepository
 
     // Get messages in order for AI memory
     List<ChatMessageEntry> findByChatIdOrderByTimestampAsc(Long chatId);
+    int countByChatId(Long chatId);
+
 }

@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface ChatRepository extends JpaRepository<Chat, Long> {
+    List<Chat> findByUserIdOrderByTimestampDesc(Long userId);
     List<Chat> findByUserId(Long userId);
 }

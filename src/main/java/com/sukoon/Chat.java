@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "chats")
@@ -12,7 +14,6 @@ public class Chat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private LocalDateTime timestamp;
-    private int messageCount = 0;  // tracks messages sent
     private String summary;         // stores final summary
     private boolean isEnded = false; // tracks if chat is over
 
@@ -20,6 +21,12 @@ public class Chat {
     @ManyToOne
     @JoinColumn(name="user_id")
     private User user;
+
+    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MoodEntry> moodEntries = new ArrayList<>();
+
+    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatMessageEntry> messageEntries = new ArrayList<>();
 
     //default constructor
     public Chat(){
@@ -33,7 +40,6 @@ public class Chat {
     public Long getId() { return id; }
     public LocalDateTime getTimestamp() { return timestamp; }
     public User getUser() { return user; }
-    public int getMessageCount() { return messageCount; }
     public String getSummary() { return summary; }
     public boolean isEnded() { return isEnded; }
 
@@ -43,7 +49,6 @@ public class Chat {
         this.timestamp = timestamp;
     }
     public void setId(Long id) { this.id = id; }
-    public void setMessageCount(int messageCount) { this.messageCount = messageCount; }
     public void setSummary(String summary) { this.summary = summary; }
     public void setEnded(boolean ended) { isEnded = ended; }
 

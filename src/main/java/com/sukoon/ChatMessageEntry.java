@@ -18,6 +18,7 @@ public class ChatMessageEntry {
     private String aiResponse;   // AI's response
 
     private LocalDateTime timestamp;
+    private Integer messageCount = 0;
 
     @ManyToOne
     @JoinColumn(name = "chat_id")
@@ -33,11 +34,13 @@ public class ChatMessageEntry {
     public String getMessage() { return message; }
     public String getAiResponse() { return aiResponse; }
     public LocalDateTime getTimestamp() { return timestamp; }
+    public Integer getMessageCount() { return messageCount; }
     public Chat getChat() { return chat; }
 
     // Setters
     public void setMessage(String message) { this.message = message; }
     public void setAiResponse(String aiResponse) { this.aiResponse = aiResponse; }
+    public void setMessageCount(Integer messageCount) { this.messageCount = messageCount; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
     public void setChat(Chat chat) { this.chat = chat; }
 }

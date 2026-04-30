@@ -1,6 +1,7 @@
 package com.sukoon;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,12 @@ public class ChatMessageEntryController {
     private ChatMessageEntryRepository chatMessageEntryRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
     private ChatRepository chatRepository;
 
     @Autowired
@@ -21,7 +28,6 @@ public class ChatMessageEntryController {
     @Autowired
     private MoodEntryRepository moodEntryRepository;
 
-    private static final int MESSAGE_LIMIT = 20;
 
     @PostMapping("/{chatId}/addmessage")
     public Map<String, Object> addMessage(
@@ -43,9 +49,16 @@ public class ChatMessageEntryController {
             );
         }
 
-        // Check message limit
-        if(chat.getMessageCount() >= MESSAGE_LIMIT) {
-            return endChat(chat);
+        int count = chatMessageEntryRepository.countByChatId(chatId);
+
+        if (count > 20) {
+            chat.setEnded(true);
+            chatRepository.save(chat);
+
+            return Map.of(
+                    "error", "Chat limit reached (20 messages)",
+                    "chatEnded", true
+            );
         }
 
         // Get mood for this chat
@@ -74,19 +87,16 @@ public class ChatMessageEntryController {
         chatMessageEntryRepository.save(chatMessageEntry);
 
         // Increment message count
-        chat.setMessageCount(chat.getMessageCount() + 1);
+        chatMessageEntry.setMessageCount(chatMessageEntry.getMessageCount() + 1);
         chatRepository.save(chat);
 
-        // Check if this was the last message
-        int remaining = MESSAGE_LIMIT - chat.getMessageCount();
 
         // Auto end chat if limit reached
-        if(chat.getMessageCount() >= MESSAGE_LIMIT) {
+        if(chatMessageEntry.getMessageCount() > 20) {
             Map<String, Object> endResult = endChat(chat);
             return Map.of(
                     "message", chatMessageEntry,
                     "aiResponse", aiResponse,
-                    "messagesRemaining", 0,
                     "chatEnded", true,
                     "summary", endResult.get("summary")
             );
@@ -94,8 +104,8 @@ public class ChatMessageEntryController {
 
         return Map.of(
                 "message", chatMessageEntry,
+                "messageCount", count+1,
                 "aiResponse", aiResponse,
-                "messagesRemaining", remaining,
                 "chatEnded", false
         );
     }
@@ -142,10 +152,52 @@ public class ChatMessageEntryController {
         return endChat(chat);
     }
 
+
+    @GetMapping("/{chatId}/count")
+    public ResponseEntity<Map<String, Object>> getMessageCount(
+            @PathVariable Long chatId,
+            @RequestHeader("Authorization") String authHeader) {
+
+        // ✅ Extract email from JWT
+        String token = authHeader.substring(7);
+        String email = jwtUtil.extractEmail(token);
+
+        // ✅ Find user
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("error", "Unauthorized access"));
+        }
+
+        // ✅ Find chat
+        Chat chat = chatRepository.findById(chatId).orElse(null);
+
+        if (chat == null) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("error", "Chat not found"));
+        }
+
+        // ✅ SECURITY CHECK (VERY IMPORTANT)
+        if (!chat.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("error", "Unauthorized access"));
+        }
+
+        // ✅ Count messages
+        int count = chatMessageEntryRepository.countByChatId(chatId);
+
+        return ResponseEntity.ok(Map.of(
+                "chatId", chatId,
+                "messageCount", count,
+                "limit", 20
+        ));
+    }
+
     // Get chat history
     @GetMapping("/{chatId}/history")
     public List<ChatMessageEntry> getChatHistory(@PathVariable Long chatId) {
         return chatMessageEntryRepository
                 .findByChatIdOrderByTimestampAsc(chatId);
     }
+
 }

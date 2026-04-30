@@ -27,9 +27,9 @@ public class AIService {
 
         // System message — tells AI who it is
         messages.append("{\"role\":\"system\",\"content\":\"You are Sukoon, ")
-                .append("a compassionate AI mental wellness companion. ")
+                .append("a compassionate AI mental wellness companion and therapist. ")
                 .append("The user is feeling ").append(mood).append(". ")
-                .append("Respond with empathy, keep responses under 25 words.\"},");
+                .append("Respond with empathy, keep responses under 30 words.\"},");
 
         // Add previous messages for memory
         for(ChatMessageEntry prev : history) {
