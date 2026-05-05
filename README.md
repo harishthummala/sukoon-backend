@@ -82,6 +82,7 @@ Sukoon is not just a CRUD app. It reflects real-world engineering decisions arou
 ```bash
 sukoon-backend/
 sukoon-frontend-v2/
+```
 
 ---
  
