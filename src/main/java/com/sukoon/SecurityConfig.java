@@ -22,23 +22,33 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // Disable CSRF for APIs
                 .csrf(csrf -> csrf.disable())
+
+                // Enable CORS (important)
+                .cors(cors -> {})
+
+                // Stateless session (JWT)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
-                        // Allow OPTIONS for CORS preflight
+
+                        // ✅ Allow preflight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Public auth endpoints — ALL variations
-                        .requestMatchers("/api/auth/register").permitAll()
-                        .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/api/auth/google").permitAll()
-                        .requestMatchers("/api/auth/forgot-password").permitAll()
-                        .requestMatchers("/api/auth/reset-password").permitAll()
-                        .requestMatchers("/api/users/register").permitAll()
-                        .requestMatchers("/api/users/login").permitAll()
-                        // Everything else requires JWT
+
+                        // ✅ Allow ALL auth endpoints (THIS FIXES YOUR ISSUE)
+                        .requestMatchers("/auth/**").permitAll()
+
+                        // (Optional: keep if you use these too)
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/users/**").permitAll()
+
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
+
+                // JWT filter
                 .addFilterBefore(jwtFilter,
                         UsernamePasswordAuthenticationFilter.class);
 
