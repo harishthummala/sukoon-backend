@@ -88,18 +88,18 @@ sukoon-frontend-v2/
  
 ## Deployment
 
--Frontend deployed on Vercel
--Backend deployed on AWS EC2
--Database managed on AWS RDS
--Production routing handled through Nginx
--CI/CD automated with GitHub Actions
--Future Enhancements
+- Frontend deployed on Vercel
+- Backend deployed on AWS EC2
+- Database managed on AWS RDS
+- Production routing handled through Nginx
+- CI/CD automated with GitHub Actions
+- Future Enhancements
 
 ---
 
 ## Advanced analytics dashboard
 
--Better user personalization
--Expanded AI-driven support flows
--Observability and structured logging improvements
--Rate limiting and stronger production hardening
+- Better user personalization
+- Expanded AI-driven support flows
+- Observability and structured logging improvements
+- Rate limiting and stronger production hardening
