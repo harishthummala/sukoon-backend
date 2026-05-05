@@ -59,6 +59,7 @@ jobs:
               -e JWT_EXPIRATION=86400000 \
               -e AI_API_KEY=${{ secrets.AI_API_KEY }} \
               -e AI_API_URL=${{ secrets.AI_API_URL }} \
+              -e GOOGLE_CLIENT_ID=772681843196-dqudmnoc3iqf2np8cjl2836enqtam0st.apps.googleusercontent.com \
               --restart always \
               haishthummala/sukoon-backend:latest
             docker image prune -f

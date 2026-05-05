@@ -33,29 +33,30 @@ public class GoogleAuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Value("${google.client.id:}")
+    @Value("${google.client.id:${GOOGLE_CLIENT_ID:}}")
     private String googleClientId;
+
+    private static final String DEFAULT_GOOGLE_CLIENT_ID =
+            "772681843196-dqudmnoc3iqf2np8cjl2836enqtam0st.apps.googleusercontent.com";
 
     @PostMapping("/google")
     public ResponseEntity<Map<String, Object>> googleLogin(
             @RequestBody Map<String, String> body) {
 
         String googleToken = getGoogleToken(body);
+        String authMode = resolveAuthMode(body);
 
         if(googleToken == null || googleToken.isBlank()) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", "Google token is required"));
         }
 
-        if(googleClientId == null || googleClientId.isBlank()) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Google client ID is not configured"));
-        }
+        String configuredGoogleClientId = resolveGoogleClientId();
 
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier
                     .Builder(HTTP_TRANSPORT, JSON_FACTORY)
-                    .setAudience(Collections.singletonList(googleClientId))
+                    .setAudience(Collections.singletonList(configuredGoogleClientId))
                     .build();
 
             GoogleIdToken idToken = verifier.verify(googleToken);
@@ -80,6 +81,17 @@ public class GoogleAuthController {
             String name = resolveName(payload, email);
 
             User user = userRepository.findByEmailIgnoreCase(email);
+
+            if(user == null && "login".equals(authMode)) {
+                return ResponseEntity.status(404)
+                        .body(Map.of("error", "No account found for this Google email. Please sign up first."));
+            }
+
+            if(user != null && "register".equals(authMode)) {
+                return ResponseEntity.status(409)
+                        .body(Map.of("error", "An account already exists for this Google email. Please sign in."));
+            }
+
             if(user == null) {
                 user = new User();
                 user.setEmail(email);
@@ -120,6 +132,27 @@ public class GoogleAuthController {
         }
 
         return body.get("token");
+    }
+
+    private String resolveAuthMode(Map<String, String> body) {
+        if(body == null) {
+            return "login";
+        }
+
+        String mode = body.get("mode");
+        if("register".equalsIgnoreCase(mode) || "signup".equalsIgnoreCase(mode)) {
+            return "register";
+        }
+
+        return "login";
+    }
+
+    private String resolveGoogleClientId() {
+        if(googleClientId != null && !googleClientId.isBlank()) {
+            return googleClientId.trim();
+        }
+
+        return DEFAULT_GOOGLE_CLIENT_ID;
     }
 
     private String normalizeEmail(String email) {
